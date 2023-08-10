@@ -5,12 +5,41 @@
 #include <cstdio>
 
 #include "Yolov8_c_types.h"
-#include <opencv2/opencv.hpp>
-#include <opencv2/core/types_c.h>
 #include "detection/inference.h"
+#include <string>
+#include <cstdlib>
 
-// Inference inf("/home/franklinselva/dev/work/drone-experiment/yolov8-onnx-cpp/source/models/yolov8s.onnx", cv::Size(640, 480),
-//               "/home/franklinselva/dev/work/drone-experiment/yolov8-onnx-cpp/source/classes/classes.txt", true);
+std::string executeCommand(const std::string &command)
+{
+  std::ostringstream output;
+  FILE *pipe = popen(command.c_str(), "r");
+  if (!pipe)
+  {
+    throw std::runtime_error("popen() failed.");
+  }
+
+  char buffer[128];
+  while (fgets(buffer, sizeof(buffer), pipe) != nullptr)
+  {
+    output << buffer;
+  }
+
+  int status = pclose(pipe);
+  if (status != 0)
+  {
+    throw std::runtime_error("Command execution failed.");
+  }
+
+  return output.str();
+}
+
+// OpenCV / DNN / Inference
+const char *pkg_config_cmd = "pkg-config Yolov8-genom3 --variable=datarootdir";
+std::string package_shared_dir = executeCommand(pkg_config_cmd);
+
+std::string model_path = package_shared_dir + "yolov8-genom3/models/yolov8s.onnx";
+std::string classes_path = package_shared_dir + "yolov8-genom3/classes/classes.txt";
+Inference inf(model_path, cv::Size(640, 480), classes_path, true);
 
 /* --- Task detect ------------------------------------------------------ */
 
@@ -171,7 +200,9 @@ DetectObjects(bool start_detection, const or_sensor_frame *image_frame,
         cv::Mat::AUTO_STEP);
   }
 
-  // auto detections = inf.runInference(image);
+  // Resize image
+  cv::resize(image, image, cv::Size(640, 480)); // Should match the input size of the model
+  auto detections = inf.runInference(image);
 
   return Yolov8_main;
 }

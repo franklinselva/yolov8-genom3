@@ -32,7 +32,7 @@ component Yolov8 {
   doc 	  "A GenoM module for Yolov8 integration using a monocular camera.";
   uses		or_pose_estimator;
 
-  codels-require "opencv4, felix-g3utils, eigen3, vision-idl";
+  codels-require "opencv4 >= 4.7, felix-g3utils, eigen3, vision-idl";
 
   exception e_BAD_IMAGE_PORT { short code; string<128> message; };
   exception e_OPENCV_ERROR { short code; string<128> message; };
