@@ -7,6 +7,10 @@
 #include "Yolov8_c_types.h"
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/types_c.h>
+#include "detection/inference.h"
+
+// Inference inf("/home/franklinselva/dev/work/drone-experiment/yolov8-onnx-cpp/source/models/yolov8s.onnx", cv::Size(640, 480),
+//               "/home/franklinselva/dev/work/drone-experiment/yolov8-onnx-cpp/source/classes/classes.txt", true);
 
 /* --- Task detect ------------------------------------------------------ */
 
@@ -166,6 +170,8 @@ DetectObjects(bool start_detection, const or_sensor_frame *image_frame,
         image_frame->pixels._buffer,
         cv::Mat::AUTO_STEP);
   }
+
+  // auto detections = inf.runInference(image);
 
   return Yolov8_main;
 }

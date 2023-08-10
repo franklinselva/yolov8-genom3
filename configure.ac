@@ -42,6 +42,12 @@ if test "$GENOM3" = "no"; then
   AC_MSG_ERROR([genom3 tool not found], 2)
 fi
 
+AC_ARG_WITH([yolo-models],
+  [AS_HELP_STRING([--with-yolo-models=DIR], [Specify the path to the external models directory])],
+  [EXTERNAL_MODELS_DIR="$with_external_models"],
+  [EXTERNAL_MODELS_DIR="$srcdir/models"])
+AC_SUBST([EXTERNAL_MODELS_DIR])
+
 dnl --with-templates option
 AG_OPT_TEMPLATES([$GENOM3 ],
     [$srcdir/yolov8.gen])

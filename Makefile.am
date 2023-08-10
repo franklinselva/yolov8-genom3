@@ -33,3 +33,9 @@ dist_doc_DATA=	README.html README.adoc
 
 %.html: %.adoc
 	$(ASCIIDOCTOR) $(ASCIIDOCTOR_ARGS) -b html5 -o $@ $<
+
+# Copy external models during build
+modelsdir = $(datadir)/$(PACKAGE)/models
+models_DATA = $(wildcard $(EXTERNAL_MODELS_DIR)/*)
+
+EXTRA_DIST = $(models_DATA)
