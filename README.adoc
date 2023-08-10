@@ -1,0 +1,245 @@
+
+
+// This file was generated from yolov8.gen by the skeleton
+// template. Manual changes should be preserved, although they should
+// rather be added to the "doc" attributes of the genom objects defined in
+// yolov8.gen.
+
+= Yolov8 component
+shasthamsa@laas.fr
+1.0
+:toc: left
+
+// fix default asciidoctor stylesheet issue #2407 and add hr clear rule
+ifdef::backend-html5[]
+[pass]
+++++
+<link rel="stylesheet" href="data:text/css,p{font-size: inherit !important}" >
+<link rel="stylesheet" href="data:text/css,hr{clear: both}" >
+++++
+endif::[]
+
+
+A GenoM module for Yolov8 integration using a monocular camera.
+
+
+== Ports
+
+
+[[ImageFrame]]
+=== ImageFrame (in)
+
+
+[role="small", width="50%", float="right", cols="1"]
+|===
+a|.Data structure
+[disc]
+ * `struct ::or::sensor::frame` `ImageFrame`
+ ** `struct ::or::time::ts` `ts`
+ *** `long` `sec`
+ *** `long` `nsec`
+ ** `boolean` `compressed`
+ ** `unsigned short` `height`
+ ** `unsigned short` `width`
+ ** `unsigned short` `bpp`
+ ** `sequence< octet >` `pixels`
+
+|===
+
+The image frame to process.
+
+'''
+
+[[Intrinsics]]
+=== Intrinsics (in)
+
+
+[role="small", width="50%", float="right", cols="1"]
+|===
+a|.Data structure
+[disc]
+ * `struct ::or::sensor::intrinsics` `Intrinsics`
+ ** `struct ::or::sensor::calibration` `calib`
+ *** `float` `fx`
+ *** `float` `fy`
+ *** `float` `cx`
+ *** `float` `cy`
+ *** `float` `gamma`
+ ** `struct ::or::sensor::distortion` `disto`
+ *** `float` `k1`
+ *** `float` `k2`
+ *** `float` `k3`
+ *** `float` `p1`
+ *** `float` `p2`
+
+|===
+
+'''
+
+[[Extrinsics]]
+=== Extrinsics (in)
+
+
+[role="small", width="50%", float="right", cols="1"]
+|===
+a|.Data structure
+[disc]
+ * `struct ::or::sensor::extrinsics` `Extrinsics`
+ ** `struct ::or::sensor::translation` `trans`
+ *** `float` `tx`
+ *** `float` `ty`
+ *** `float` `tz`
+ ** `struct ::or::sensor::rotation` `rot`
+ *** `float` `roll`
+ *** `float` `pitch`
+ *** `float` `yaw`
+
+|===
+
+'''
+
+== Services
+
+[[detect_objects]]
+=== detect_objects (activity)
+
+[role="small", width="50%", float="right", cols="1"]
+|===
+a|.Throws
+[disc]
+ * `exception ::Yolov8::e_OUT_OF_MEM`
+ ** `short` `code`
+ ** `string<128>` `message`
+
+ * `exception ::Yolov8::e_BAD_IMAGE_PORT`
+ ** `short` `code`
+ ** `string<128>` `message`
+
+ * `exception ::Yolov8::e_OPENCV_ERROR`
+ ** `short` `code`
+ ** `string<128>` `message`
+
+ * `exception ::Yolov8::e_BAD_CONFIG`
+ ** `short` `code`
+ ** `string<128>` `message`
+
+a|.Context
+[disc]
+  * In task `<<detect>>`
+  (frequency 10.0 _Hz_)
+  * Reads port `<<ImageFrame>>`
+  * Reads port `<<Intrinsics>>`
+  * Reads port `<<Extrinsics>>`
+|===
+
+Perform object detections with yolov8.
+
+'''
+
+[[set_classes]]
+=== set_classes (function)
+
+[role="small", width="50%", float="right", cols="1"]
+|===
+a|.Inputs
+[disc]
+ * `sequence< string >` `class_names` Set the class names to be detected.
+
+a|.Throws
+[disc]
+ * `exception ::Yolov8::e_BAD_CONFIG`
+ ** `short` `code`
+ ** `string<128>` `message`
+
+|===
+
+Set the class names to be detected.
+
+'''
+
+[[set_debug]]
+=== set_debug (function)
+
+[role="small", width="50%", float="right", cols="1"]
+|===
+a|.Inputs
+[disc]
+ * `boolean` `is_debug_mode` (default `"0"`) Set debug mode (default: false)
+
+|===
+
+Set the debug mode.
+
+'''
+
+[[show_image_frames]]
+=== show_image_frames (function)
+
+[role="small", width="50%", float="right", cols="1"]
+|===
+a|.Inputs
+[disc]
+ * `boolean` `show_cv_frames` (default `"0"`) Show image frames (default: false)
+
+|===
+
+Show image frames.
+
+'''
+
+[[set_verbose_level]]
+=== set_verbose_level (function)
+
+[role="small", width="50%", float="right", cols="1"]
+|===
+a|.Inputs
+[disc]
+ * `octet` `verbose_level` (default `"0"`) Verbose level
+
+|===
+
+Set the verbose level.
+
+'''
+
+[[start_object_detection]]
+=== start_object_detection (function)
+
+
+Start detecting the object.
+
+'''
+
+[[stop_object_detection]]
+=== stop_object_detection (function)
+
+
+Stop detecting the object.
+
+'''
+
+== Tasks
+
+[[detect]]
+=== detect
+
+[role="small", width="50%", float="right", cols="1"]
+|===
+a|.Context
+[disc]
+  * Frequency 10.0 _Hz_
+a|.Throws
+[disc]
+ * `exception ::Yolov8::e_OUT_OF_MEM`
+ ** `short` `code`
+ ** `string<128>` `message`
+
+ * `exception ::Yolov8::e_BAD_IMAGE_PORT`
+ ** `short` `code`
+ ** `string<128>` `message`
+
+|===
+
+Track the object in the image.
+
+'''

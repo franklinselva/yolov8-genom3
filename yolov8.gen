@@ -1,0 +1,129 @@
+/*
+ * Copyright (c) 2022-2022 LAAS/CNRS
+ *
+ * Author: Selvakumar H S - LAAS/CNRS
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+
+#pragma require "openrobots2-idl >= 2.1"
+#pragma require "felix-idl"
+#pragma require "vision-idl"
+
+#include "or/pose/pose_estimator.gen"
+#include "or/pose/rigid_body.gen"
+#include "or/sensor/camera.gen"
+
+/* -------------------------- MODULE DECLARATION --------------------------- */
+component Yolov8 {
+  version "1.0";
+  email	  "shasthamsa@laas.fr";
+  lang	  "c";
+  doc 	  "A GenoM module for Yolov8 integration using a monocular camera.";
+  uses		or_pose_estimator;
+
+  codels-require "opencv4, felix-g3utils, eigen3, vision-idl";
+
+  exception e_BAD_IMAGE_PORT { short code; string<128> message; };
+  exception e_OPENCV_ERROR { short code; string<128> message; };
+  exception e_OUT_OF_MEM { short code; string<128> message; };
+  exception e_BAD_CONFIG { short code; string<128> message; };
+
+  /* -------------------------- IDS --------------------------- */
+  ids {
+    or::sensor::intrinsics intrinsics;	        // Camera intrinsics
+    or::sensor::extrinsics extrinsics;	        // Camera extrinsics
+    or::sensor::frame image_frame;		        // Image frame
+
+    sequence<string> classes;	            // Class names
+    boolean debug, show_frames, start_detection;
+    octet v_level;
+  };
+
+  /* ------------- DEFINITION OF PORTS -------------- */
+  // Robot
+//   port in or_pose_estimator::state RobotPose {
+//     doc "The pose of the robot.";
+//   };
+
+  // Camera
+  port in or::sensor::frame ImageFrame {
+    doc "The image frame to process.";
+  };
+  port in or::sensor::intrinsics Intrinsics;
+  port in or::sensor::extrinsics Extrinsics;
+
+  /* ------------------ TASK DEFINITION -------------------- */
+  task detect {
+    period 100 ms;
+    doc "Track the object in the image.";
+
+    throw e_OUT_OF_MEM, e_BAD_IMAGE_PORT;
+  };
+
+  /* ------------------ ACTIVITY DEFINITION --------------------- */
+
+  activity detect_objects() {
+    doc "Perform object detections with yolov8.";
+    after set_classes;
+    task detect;
+
+    codel <start> FetchPorts(port in ImageFrame, port in Intrinsics, port in Extrinsics, ids in debug)
+          yield pause::start, poll;
+    codel <poll> FetchDataFromPorts(port in ImageFrame, port in Intrinsics, port in Extrinsics,
+          ids out image_frame, ids out intrinsics, ids out extrinsics, ids in debug)
+          yield pause::poll, main, ether;
+    codel <main> DetectObjects(ids in start_detection, ids in image_frame, ids in intrinsics, ids in extrinsics, ids in classes,
+          ids in debug, ids in show_frames)
+          yield main, poll, ether;
+
+    throw e_BAD_IMAGE_PORT, e_OPENCV_ERROR, e_BAD_CONFIG, e_OUT_OF_MEM;
+  };
+
+  /* ------------------ SERVICE DEFINITION: Attributes -------------------- */
+
+
+  /* ------------------ SERVICE DEFINITION: Functions -------------------- */
+  function set_classes(in sequence<string> class_names =: "Set the class names to be detected." ) {
+    doc "Set the class names to be detected.";
+    codel SetClasses(local in class_names, ids out classes);
+    throw e_BAD_CONFIG;
+  };
+
+  function set_debug(in boolean is_debug_mode = FALSE : "Set debug mode (default: false)" ) {
+    doc "Set the debug mode.";
+    codel SetDebug(local in is_debug_mode, ids out debug);
+  };
+
+  function show_image_frames(in boolean show_cv_frames = FALSE : "Show image frames (default: false)" ) {
+    doc "Show image frames.";
+    codel ShowFrames(local in show_cv_frames, ids out show_frames);
+  };
+
+  function set_verbose_level(in octet verbose_level = 0 : "Verbose level") {
+    doc "Set the verbose level.";
+    codel SetVerboseLevel(local in verbose_level, ids out v_level);
+  };
+
+
+  function start_object_detection() {
+    doc "Start detecting the object.";
+    codel SetStartDetection(ids out start_detection);
+  };
+
+  function stop_object_detection() {
+    doc "Stop detecting the object.";
+    codel SetStopDetection(ids out start_detection);
+  };
+
+};
