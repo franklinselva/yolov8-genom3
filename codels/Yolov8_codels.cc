@@ -3,7 +3,6 @@
 
 #include "Yolov8_c_types.h"
 
-
 /* --- Function set_classes --------------------------------------------- */
 
 /** Codel SetClasses of function set_classes.
@@ -15,10 +14,14 @@ genom_event
 SetClasses(const sequence_string *class_names,
            sequence_string *classes, const genom_context self)
 {
-  /* skeleton sample: insert your code */
-  /* skeleton sample */ return genom_ok;
-}
+  for (int i = 0; i < class_names->_length; i++)
+  {
+    classes->_buffer[i] = class_names->_buffer[i];
+  }
+  classes->_length = class_names->_length;
 
+  return genom_ok;
+}
 
 /* --- Function set_debug ----------------------------------------------- */
 
@@ -29,10 +32,9 @@ SetClasses(const sequence_string *class_names,
 genom_event
 SetDebug(bool is_debug_mode, bool *debug, const genom_context self)
 {
-  /* skeleton sample: insert your code */
-  /* skeleton sample */ return genom_ok;
+  debug = &is_debug_mode;
+  return genom_ok;
 }
-
 
 /* --- Function show_image_frames --------------------------------------- */
 
@@ -44,10 +46,9 @@ genom_event
 ShowFrames(bool show_cv_frames, bool *show_frames,
            const genom_context self)
 {
-  /* skeleton sample: insert your code */
-  /* skeleton sample */ return genom_ok;
+  show_frames = &show_cv_frames;
+  return genom_ok;
 }
-
 
 /* --- Function set_verbose_level --------------------------------------- */
 
@@ -59,10 +60,9 @@ genom_event
 SetVerboseLevel(uint8_t verbose_level, uint8_t *v_level,
                 const genom_context self)
 {
-  /* skeleton sample: insert your code */
-  /* skeleton sample */ return genom_ok;
+  v_level = &verbose_level;
+  return genom_ok;
 }
-
 
 /* --- Function start_object_detection ---------------------------------- */
 
@@ -73,10 +73,9 @@ SetVerboseLevel(uint8_t verbose_level, uint8_t *v_level,
 genom_event
 SetStartDetection(bool *start_detection, const genom_context self)
 {
-  /* skeleton sample: insert your code */
-  /* skeleton sample */ return genom_ok;
+  *start_detection = true;
+  return genom_ok;
 }
-
 
 /* --- Function stop_object_detection ----------------------------------- */
 
@@ -87,6 +86,6 @@ SetStartDetection(bool *start_detection, const genom_context self)
 genom_event
 SetStopDetection(bool *start_detection, const genom_context self)
 {
-  /* skeleton sample: insert your code */
-  /* skeleton sample */ return genom_ok;
+  *start_detection = false;
+  return genom_ok;
 }
