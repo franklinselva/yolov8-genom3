@@ -1,0 +1,30 @@
+#ifndef IDL_YOLO_STRUCT
+#define IDL_YOLO_STRUCT
+
+#include "or/sensor/image.idl"
+
+module or {
+module Yolo {
+    struct bounding_box {
+        float x;
+        float y;
+        float w;
+        float h;
+    };
+
+    /*---- Yolo Detection ----*/
+    struct Detection {
+        short class_id;
+        float confidence;
+        string label;
+        bounding_box bbox;
+    };
+
+    struct Detections{
+        sequence<Detection> detections;
+        or::sensor::frame image_frame;
+    };
+};
+};
+
+#endif

@@ -3,7 +3,7 @@ ACLOCAL_AMFLAGS=	-I autoconf
 
 # IDL source files
 idldir=		$(datadir)/idl/Yolov8
-nobase_dist_idl_DATA= yolov8.gen
+nobase_dist_idl_DATA= yolov8.gen Yolo.idl
 
 pkgconfigdir=	$(libdir)/pkgconfig
 pkgconfig_DATA=

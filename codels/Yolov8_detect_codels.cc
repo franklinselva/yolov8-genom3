@@ -155,7 +155,8 @@ genom_event
 DetectObjects(bool start_detection, const or_sensor_frame *image_frame,
               const or_sensor_intrinsics *intrinsics,
               const or_sensor_extrinsics *extrinsics,
-              const sequence_string *classes, bool debug,
+              const sequence_string *classes,
+              const Yolov8_Detections *Detections, bool debug,
               bool show_frames, const genom_context self)
 {
   if (!start_detection)
@@ -237,6 +238,19 @@ DetectObjects(bool start_detection, const or_sensor_frame *image_frame,
           cv::putText(image, detection.className, cv::Point(detection.box.x, detection.box.y - 5), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 2);
         }
       }
+
+      // Add the detection to the list
+      or_Yolo_Detection detectionData;
+      detectionData.bbox.x = detection.box.x;
+      detectionData.bbox.y = detection.box.y;
+      detectionData.bbox.w = detection.box.width;
+      detectionData.bbox.h = detection.box.height;
+      detectionData.class_id = detection.class_id;
+      detectionData.label = const_cast<char *>(detection.className.c_str());
+      detectionData.confidence = detection.confidence;
+
+      Detections->data(self)->detections._buffer[Detections->data(self)->detections._length] = detectionData;
+      Detections->data(self)->detections._length++;
     }
   }
 
@@ -246,6 +260,9 @@ DetectObjects(bool start_detection, const or_sensor_frame *image_frame,
     cv::imshow("Yolov8", image);
     cv::waitKey(1);
   }
+
+  Detections->data(self)->image_frame = *image_frame;
+  Detections->write(self);
 
   return Yolov8_main;
 }

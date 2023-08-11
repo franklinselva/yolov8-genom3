@@ -98,6 +98,40 @@ a|.Data structure
 
 '''
 
+[[Detections]]
+=== Detections (out)
+
+
+[role="small", width="50%", float="right", cols="1"]
+|===
+a|.Data structure
+[disc]
+ * `struct ::or::Yolo::Detections` `Detections`
+ ** `sequence< struct ::or::Yolo::Detection >` `detections`
+ *** `short` `class_id`
+ *** `float` `confidence`
+ *** `string` `label`
+ *** `struct ::or::Yolo::bounding_box` `bbox`
+ **** `float` `x`
+ **** `float` `y`
+ **** `float` `w`
+ **** `float` `h`
+ ** `struct ::or::sensor::frame` `image_frame`
+ *** `struct ::or::time::ts` `ts`
+ **** `long` `sec`
+ **** `long` `nsec`
+ *** `boolean` `compressed`
+ *** `unsigned short` `height`
+ *** `unsigned short` `width`
+ *** `unsigned short` `bpp`
+ *** `sequence< octet >` `pixels`
+
+|===
+
+The detected classes from the image frame.
+
+'''
+
 == Services
 
 [[detect_objects]]
@@ -130,6 +164,7 @@ a|.Context
   * Reads port `<<ImageFrame>>`
   * Reads port `<<Intrinsics>>`
   * Reads port `<<Extrinsics>>`
+  * Updates port `<<Detections>>`
 |===
 
 Perform object detections with yolov8.

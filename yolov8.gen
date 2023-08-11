@@ -24,6 +24,8 @@
 #include "or/pose/rigid_body.gen"
 #include "or/sensor/camera.gen"
 
+#include "Yolo.idl"
+
 /* -------------------------- MODULE DECLARATION --------------------------- */
 component Yolov8 {
   version "1.0";
@@ -63,6 +65,10 @@ component Yolov8 {
   port in or::sensor::intrinsics Intrinsics;
   port in or::sensor::extrinsics Extrinsics;
 
+  port out or::Yolo::Detections Detections {
+    doc "The detected classes from the image frame.";
+  };
+
   /* ------------------ TASK DEFINITION -------------------- */
   task detect {
     period 100 ms;
@@ -83,7 +89,7 @@ component Yolov8 {
     codel <poll> FetchDataFromPorts(port in ImageFrame, port in Intrinsics, port in Extrinsics,
           ids out image_frame, ids out intrinsics, ids out extrinsics, ids in debug)
           yield pause::poll, main, ether;
-    codel <main> DetectObjects(ids in start_detection, ids in image_frame, ids in intrinsics, ids in extrinsics, ids in classes,
+    codel <main> DetectObjects(ids in start_detection, ids in image_frame, ids in intrinsics, ids in extrinsics, ids in classes, port out Detections,
           ids in debug, ids in show_frames)
           yield main, poll, ether;
 
