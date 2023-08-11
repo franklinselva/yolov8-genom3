@@ -9,6 +9,8 @@
 #include <string>
 #include <cstdlib>
 
+/* --- Setup ------------------------------------------------------ */
+
 std::string executeCommand(const std::string &command)
 {
   std::ostringstream output;
@@ -30,15 +32,15 @@ std::string executeCommand(const std::string &command)
     throw std::runtime_error("Command execution failed.");
   }
 
-  return output.str();
+  return output.str().substr(0, output.str().size() - 1);
 }
 
 // OpenCV / DNN / Inference
 const char *pkg_config_cmd = "pkg-config Yolov8-genom3 --variable=datarootdir";
 std::string package_shared_dir = executeCommand(pkg_config_cmd);
 
-std::string model_path = package_shared_dir + "yolov8-genom3/models/yolov8s.onnx";
-std::string classes_path = package_shared_dir + "yolov8-genom3/classes/classes.txt";
+std::string model_path = package_shared_dir + "/yolov8-genom3/models/yolov8s.onnx";
+std::string classes_path = package_shared_dir + "/yolov8-genom3/classes/classes.txt";
 Inference inf(model_path, cv::Size(640, 480), classes_path, true);
 
 /* --- Task detect ------------------------------------------------------ */
@@ -166,7 +168,6 @@ DetectObjects(bool start_detection, const or_sensor_frame *image_frame,
   }
 
   bool is_object_found = false;
-  double image_x = 0.0, image_y = 0.0;
   // Convert frame to cv::Mat
   cv::Mat image;
   if (image_frame->compressed)
@@ -202,7 +203,49 @@ DetectObjects(bool start_detection, const or_sensor_frame *image_frame,
 
   // Resize image
   cv::resize(image, image, cv::Size(640, 480)); // Should match the input size of the model
-  auto detections = inf.runInference(image);
+  std::vector<Detection> detections = inf.runInference(image);
+
+  // Log detections
+  if (debug)
+  {
+    size_t no_detections = detections.size();
+    CODEL_LOG_INFO(2, 1, "Found %d objects", no_detections);
+  }
+
+  // Check if the object is found
+  for (auto &detection : detections)
+  {
+    if (detection.confidence > 0.5)
+    {
+      is_object_found = true;
+
+      // Check the detected class in the list of classes
+      if (std::find(classes->_buffer, classes->_buffer + classes->_length, detection.className) != classes->_buffer + classes->_length)
+      {
+        if (show_frames)
+        {
+          // Convert the bounding box to the original image size
+          detection.box.x = detection.box.x * image_frame->width / 640;
+          detection.box.y = detection.box.y * image_frame->height / 480;
+          detection.box.width = detection.box.width * image_frame->width / 640;
+          detection.box.height = detection.box.height * image_frame->height / 480;
+
+          // Draw the bounding box
+          cv::rectangle(image, detection.box, cv::Scalar(0, 255, 0), 2);
+
+          // Draw the class name
+          cv::putText(image, detection.className, cv::Point(detection.box.x, detection.box.y - 5), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 2);
+        }
+      }
+    }
+  }
+
+  // Publish the image
+  if (show_frames)
+  {
+    cv::imshow("Yolov8", image);
+    cv::waitKey(1);
+  }
 
   return Yolov8_main;
 }
