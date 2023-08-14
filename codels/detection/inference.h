@@ -24,15 +24,10 @@ struct Detection
 class Inference
 {
 public:
-    Inference(const std::string &onnxModelPath, const cv::Size2f &modelInputShape, const std::string &classesTxtFile, const bool &runWithCuda = true)
+    Inference(const cv::Size2f &modelInputShape, const bool &runWithCuda = true)
     {
-        modelPath = onnxModelPath;
         modelShape = modelInputShape;
-        classesPath = classesTxtFile;
         cudaEnabled = runWithCuda;
-
-        loadOnnxNetwork();
-        loadClassesFromFile();
     }
     std::vector<Detection> runInference(const cv::Mat &input)
     {
@@ -166,6 +161,15 @@ public:
         }
 
         return detections;
+    }
+
+    void loadModel(const std::string &onnxModelPath, const std::string &classFilePath)
+    {
+        modelPath = onnxModelPath;
+        classesPath = classFilePath;
+
+        loadOnnxNetwork();
+        loadClassesFromFile();
     }
 
 private:

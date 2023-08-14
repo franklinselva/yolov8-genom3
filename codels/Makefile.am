@@ -3,7 +3,7 @@ lib_LTLIBRARIES = libYolov8_codels.la
 
 libYolov8_codels_la_SOURCES  =	Yolov8_c_types.h
 libYolov8_codels_la_SOURCES +=	Yolov8_codels.cc
-libYolov8_codels_la_SOURCES +=	Yolov8_detect_codels.cc
+libYolov8_codels_la_SOURCES +=	Yolov8_detect_objects_codels.cc
 
 libYolov8_codels_la_CPPFLAGS =	$(requires_CFLAGS)
 libYolov8_codels_la_LIBADD   =	$(requires_LIBS)

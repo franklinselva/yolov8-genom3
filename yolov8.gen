@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2022 LAAS/CNRS
+ * Copyright (c) 2023-2023 LAAS/CNRS
  *
  * Author: Selvakumar H S - LAAS/CNRS
  *
@@ -20,8 +20,6 @@
 #pragma require "felix-idl"
 #pragma require "vision-idl"
 
-#include "or/pose/pose_estimator.gen"
-#include "or/pose/rigid_body.gen"
 #include "or/sensor/camera.gen"
 
 #include "Yolo.idl"
@@ -32,7 +30,6 @@ component Yolov8 {
   email	  "shasthamsa@laas.fr";
   lang	  "c";
   doc 	  "A GenoM module for Yolov8 integration using a monocular camera.";
-  uses		or_pose_estimator;
 
   codels-require "opencv4 >= 4.7, felix-g3utils, eigen3, vision-idl";
 
@@ -43,93 +40,75 @@ component Yolov8 {
 
   /* -------------------------- IDS --------------------------- */
   ids {
-    or::sensor::intrinsics intrinsics;	        // Camera intrinsics
-    or::sensor::extrinsics extrinsics;	        // Camera extrinsics
     or::sensor::frame image_frame;		        // Image frame
 
     sequence<string> classes;	            // Class names
+    string resource_path;		            // Resource path
     boolean debug, show_frames, start_detection;
-    octet v_level;
+    octet verbose_level;
   };
 
   /* ------------- DEFINITION OF PORTS -------------- */
-  // Robot
-//   port in or_pose_estimator::state RobotPose {
-//     doc "The pose of the robot.";
-//   };
-
-  // Camera
   port in or::sensor::frame ImageFrame {
     doc "The image frame to process.";
   };
-  port in or::sensor::intrinsics Intrinsics;
-  port in or::sensor::extrinsics Extrinsics;
 
   port out or::Yolo::Detections Detections {
     doc "The detected classes from the image frame.";
   };
 
   /* ------------------ TASK DEFINITION -------------------- */
-  task detect {
+  task detect_objects {
     period 100 ms;
-    doc "Track the object in the image.";
+    doc "Detect the objects in the image.";
 
-    throw e_OUT_OF_MEM, e_BAD_IMAGE_PORT;
-  };
-
-  /* ------------------ ACTIVITY DEFINITION --------------------- */
-
-  activity detect_objects() {
-    doc "Perform object detections with yolov8.";
-    after set_classes;
-    task detect;
-
-    codel <start> FetchPorts(port in ImageFrame, port in Intrinsics, port in Extrinsics, ids in debug)
-          yield pause::start, poll;
-    codel <poll> FetchDataFromPorts(port in ImageFrame, port in Intrinsics, port in Extrinsics,
-          ids out image_frame, ids out intrinsics, ids out extrinsics, ids in debug)
-          yield pause::poll, main, ether;
-    codel <main> DetectObjects(ids in start_detection, ids in image_frame, ids in intrinsics, ids in extrinsics, ids in classes, port out Detections,
+    codel <start> FetchPorts(port in ImageFrame, ids in resource_path, ids in debug)
+          yield pause::start, main;
+    codel <main> DetectObjects(ids in start_detection, ids in classes, port in ImageFrame, port out Detections,
           ids in debug, ids in show_frames)
-          yield main, poll, ether;
+          yield main, pause::main, ether;
 
     throw e_BAD_IMAGE_PORT, e_OPENCV_ERROR, e_BAD_CONFIG, e_OUT_OF_MEM;
   };
 
-  /* ------------------ SERVICE DEFINITION: Attributes -------------------- */
+  /* ------------------ ACTIVITY DEFINITION --------------------- */
+  activity start_object_detection() {
+    doc "Start detecting the object.";
+    before stop_object_detection;
+    validate check_resource_path(ids out resource_path);
+    task detect_objects;
 
+    codel <start>  SetupClasses(ids inout resource_path, ids inout classes, ids in debug)
+          yield setup, pause::start, ether;
+    codel<setup> SetStartDetection(ids out start_detection)
+          yield pause::setup, ether;
+  };
+
+  activity stop_object_detection() {
+    doc "Stop detecting the object.";
+    after start_object_detection;
+    task detect_objects;
+
+    codel<start> SetStopDetection(ids out start_detection)
+          yield ether;
+  };
+
+  /* ------------------ SERVICE DEFINITION: Attributes -------------------- */
+  attribute set_classes(in classes =: "Set the class names to be detected." ) {
+    doc "Set the class names to be detected.";
+  };
+
+  attribute set_debug(in debug = FALSE : "Set debug mode (default: false)" ) {
+    doc "Set the debug mode.";
+  };
+
+  attribute show_image_frames(in show_frames = FALSE : "Show image frames (default: false)" ) {
+    doc "Show image frames.";
+  };
+
+  attribute set_verbose_level(in verbose_level = 0 : "Verbose level") {
+    doc "Set the verbose level.";
+  };
 
   /* ------------------ SERVICE DEFINITION: Functions -------------------- */
-  function set_classes(in sequence<string> class_names =: "Set the class names to be detected." ) {
-    doc "Set the class names to be detected.";
-    codel SetClasses(local in class_names, ids out classes);
-    throw e_BAD_CONFIG;
-  };
-
-  function set_debug(in boolean is_debug_mode = FALSE : "Set debug mode (default: false)" ) {
-    doc "Set the debug mode.";
-    codel SetDebug(local in is_debug_mode, ids out debug);
-  };
-
-  function show_image_frames(in boolean show_cv_frames = FALSE : "Show image frames (default: false)" ) {
-    doc "Show image frames.";
-    codel ShowFrames(local in show_cv_frames, ids out show_frames);
-  };
-
-  function set_verbose_level(in octet verbose_level = 0 : "Verbose level") {
-    doc "Set the verbose level.";
-    codel SetVerboseLevel(local in verbose_level, ids out v_level);
-  };
-
-
-  function start_object_detection() {
-    doc "Start detecting the object.";
-    codel SetStartDetection(ids out start_detection);
-  };
-
-  function stop_object_detection() {
-    doc "Stop detecting the object.";
-    codel SetStopDetection(ids out start_detection);
-  };
-
 };

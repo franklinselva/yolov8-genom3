@@ -134,17 +134,13 @@ The detected classes from the image frame.
 
 == Services
 
-[[detect_objects]]
-=== detect_objects (activity)
+[[start_object_detection]]
+=== start_object_detection (activity)
 
 [role="small", width="50%", float="right", cols="1"]
 |===
 a|.Throws
 [disc]
- * `exception ::Yolov8::e_OUT_OF_MEM`
- ** `short` `code`
- ** `string<128>` `message`
-
  * `exception ::Yolov8::e_BAD_IMAGE_PORT`
  ** `short` `code`
  ** `string<128>` `message`
@@ -157,9 +153,46 @@ a|.Throws
  ** `short` `code`
  ** `string<128>` `message`
 
+ * `exception ::Yolov8::e_OUT_OF_MEM`
+ ** `short` `code`
+ ** `string<128>` `message`
+
 a|.Context
 [disc]
-  * In task `<<detect>>`
+  * In task `<<detect_objects>>`
+  (frequency 10.0 _Hz_)
+|===
+
+Start detecting the object.
+
+'''
+
+[[stop_object_detection]]
+=== stop_object_detection (activity)
+
+[role="small", width="50%", float="right", cols="1"]
+|===
+a|.Throws
+[disc]
+ * `exception ::Yolov8::e_BAD_IMAGE_PORT`
+ ** `short` `code`
+ ** `string<128>` `message`
+
+ * `exception ::Yolov8::e_OPENCV_ERROR`
+ ** `short` `code`
+ ** `string<128>` `message`
+
+ * `exception ::Yolov8::e_BAD_CONFIG`
+ ** `short` `code`
+ ** `string<128>` `message`
+
+ * `exception ::Yolov8::e_OUT_OF_MEM`
+ ** `short` `code`
+ ** `string<128>` `message`
+
+a|.Context
+[disc]
+  * In task `<<detect_objects>>`
   (frequency 10.0 _Hz_)
   * Reads port `<<ImageFrame>>`
   * Reads port `<<Intrinsics>>`
@@ -167,24 +200,18 @@ a|.Context
   * Updates port `<<Detections>>`
 |===
 
-Perform object detections with yolov8.
+Stop detecting the object.
 
 '''
 
 [[set_classes]]
-=== set_classes (function)
+=== set_classes (attribute)
 
 [role="small", width="50%", float="right", cols="1"]
 |===
 a|.Inputs
 [disc]
- * `sequence< string >` `class_names` Set the class names to be detected.
-
-a|.Throws
-[disc]
- * `exception ::Yolov8::e_BAD_CONFIG`
- ** `short` `code`
- ** `string<128>` `message`
+ * `sequence< string >` `classes` Set the class names to be detected.
 
 |===
 
@@ -193,13 +220,13 @@ Set the class names to be detected.
 '''
 
 [[set_debug]]
-=== set_debug (function)
+=== set_debug (attribute)
 
 [role="small", width="50%", float="right", cols="1"]
 |===
 a|.Inputs
 [disc]
- * `boolean` `is_debug_mode` (default `"0"`) Set debug mode (default: false)
+ * `boolean` `debug` (default `"0"`) Set debug mode (default: false)
 
 |===
 
@@ -208,13 +235,13 @@ Set the debug mode.
 '''
 
 [[show_image_frames]]
-=== show_image_frames (function)
+=== show_image_frames (attribute)
 
 [role="small", width="50%", float="right", cols="1"]
 |===
 a|.Inputs
 [disc]
- * `boolean` `show_cv_frames` (default `"0"`) Show image frames (default: false)
+ * `boolean` `show_frames` (default `"0"`) Show image frames (default: false)
 
 |===
 
@@ -223,7 +250,7 @@ Show image frames.
 '''
 
 [[set_verbose_level]]
-=== set_verbose_level (function)
+=== set_verbose_level (attribute)
 
 [role="small", width="50%", float="right", cols="1"]
 |===
@@ -255,26 +282,36 @@ Stop detecting the object.
 
 == Tasks
 
-[[detect]]
-=== detect
+[[detect_objects]]
+=== detect_objects
 
 [role="small", width="50%", float="right", cols="1"]
 |===
 a|.Context
 [disc]
   * Frequency 10.0 _Hz_
+* Reads port `<<ImageFrame>>`
+* Updates port `<<Detections>>`
 a|.Throws
 [disc]
- * `exception ::Yolov8::e_OUT_OF_MEM`
+ * `exception ::Yolov8::e_BAD_IMAGE_PORT`
  ** `short` `code`
  ** `string<128>` `message`
 
- * `exception ::Yolov8::e_BAD_IMAGE_PORT`
+ * `exception ::Yolov8::e_OPENCV_ERROR`
+ ** `short` `code`
+ ** `string<128>` `message`
+
+ * `exception ::Yolov8::e_BAD_CONFIG`
+ ** `short` `code`
+ ** `string<128>` `message`
+
+ * `exception ::Yolov8::e_OUT_OF_MEM`
  ** `short` `code`
  ** `string<128>` `message`
 
 |===
 
-Track the object in the image.
+Detect the objects in the image.
 
 '''

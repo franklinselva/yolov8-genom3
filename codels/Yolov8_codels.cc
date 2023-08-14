@@ -1,91 +1,41 @@
 
+#include <cstdlib>
+#include "fg3utils/trace_f.h"
+#include "fg3utils/macros.h"
+#include <string>
+
+#include "utils.h"
+
 #include "acYolov8.h"
 
 #include "Yolov8_c_types.h"
 
-/* --- Function set_classes --------------------------------------------- */
+/* --- Activity start_object_detection ---------------------------------- */
 
-/** Codel SetClasses of function set_classes.
+/** Validation codel check_resource_path of activity start_object_detection.
  *
  * Returns genom_ok.
- * Throws Yolov8_e_BAD_CONFIG.
+ * Throws Yolov8_e_BAD_IMAGE_PORT, Yolov8_e_OPENCV_ERROR,
+ * Yolov8_e_BAD_CONFIG, Yolov8_e_OUT_OF_MEM.
  */
 genom_event
-SetClasses(const sequence_string *class_names,
-           sequence_string *classes, const genom_context self)
+check_resource_path(char **resource_path, const genom_context self)
 {
-  for (int i = 0; i < class_names->_length; i++)
+  const char *pkg_config_cmd = "pkg-config Yolov8-genom3 --variable=datarootdir";
+  std::string package_shared_dir = executeCommand(pkg_config_cmd);
+
+  if (package_shared_dir.empty())
   {
-    classes->_buffer[i] = class_names->_buffer[i];
+    Yolov8_e_BAD_CONFIG_detail *d;
+    snprintf(d->message, sizeof(d->message),
+             "pkg-config Yolov8-genom3 --variable=datarootdir failed. Please check if the package is installed correctly.");
+    CODEL_LOG_WARNING("Yolov8_e_BAD_CONFIG: %s", d->message);
+    return Yolov8_e_BAD_CONFIG(d, self);
   }
-  classes->_length = class_names->_length;
 
-  return genom_ok;
-}
+  package_shared_dir = package_shared_dir + "/yolov8-genom3";
 
-/* --- Function set_debug ----------------------------------------------- */
+  *resource_path = const_cast<char *>(package_shared_dir.c_str());
 
-/** Codel SetDebug of function set_debug.
- *
- * Returns genom_ok.
- */
-genom_event
-SetDebug(bool is_debug_mode, bool *debug, const genom_context self)
-{
-  debug = &is_debug_mode;
-  return genom_ok;
-}
-
-/* --- Function show_image_frames --------------------------------------- */
-
-/** Codel ShowFrames of function show_image_frames.
- *
- * Returns genom_ok.
- */
-genom_event
-ShowFrames(bool show_cv_frames, bool *show_frames,
-           const genom_context self)
-{
-  show_frames = &show_cv_frames;
-  return genom_ok;
-}
-
-/* --- Function set_verbose_level --------------------------------------- */
-
-/** Codel SetVerboseLevel of function set_verbose_level.
- *
- * Returns genom_ok.
- */
-genom_event
-SetVerboseLevel(uint8_t verbose_level, uint8_t *v_level,
-                const genom_context self)
-{
-  v_level = &verbose_level;
-  return genom_ok;
-}
-
-/* --- Function start_object_detection ---------------------------------- */
-
-/** Codel SetStartDetection of function start_object_detection.
- *
- * Returns genom_ok.
- */
-genom_event
-SetStartDetection(bool *start_detection, const genom_context self)
-{
-  *start_detection = true;
-  return genom_ok;
-}
-
-/* --- Function stop_object_detection ----------------------------------- */
-
-/** Codel SetStopDetection of function stop_object_detection.
- *
- * Returns genom_ok.
- */
-genom_event
-SetStopDetection(bool *start_detection, const genom_context self)
-{
-  *start_detection = false;
   return genom_ok;
 }
