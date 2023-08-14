@@ -1,10 +1,14 @@
+
+#ifndef UTILS_H
+#define UTILS_H
+
 #include <cstdio>
 #include <string>
 #include <sstream>
 
 /* --- Setup ------------------------------------------------------ */
 
-std::string executeCommand(const std::string &command)
+inline std::string executeCommand(const std::string &command)
 {
     std::ostringstream output;
     FILE *pipe = popen(command.c_str(), "r");
@@ -27,3 +31,5 @@ std::string executeCommand(const std::string &command)
 
     return output.str().substr(0, output.str().size() - 1);
 }
+
+#endif // UTILS_H

@@ -23,10 +23,20 @@ Inference inf(cv::Size(640, 480), true);
  *        Yolov8_e_BAD_CONFIG, Yolov8_e_OUT_OF_MEM.
  */
 genom_event
-FetchPorts(const Yolov8_ImageFrame *ImageFrame,
+FetchPorts(bool start_detection, const Yolov8_ImageFrame *ImageFrame,
+           const Yolov8_Detections *Detections,
            const char *resource_path, bool debug,
            const genom_context self)
 {
+  if (!start_detection)
+  {
+    if (debug)
+    {
+      CODEL_LOG_WARNING("Detection not started");
+    }
+    return Yolov8_pause_start;
+  }
+
   // Check if all ports are connected and available
   if (!check_port_in_p(ImageFrame))
   {
@@ -39,9 +49,20 @@ FetchPorts(const Yolov8_ImageFrame *ImageFrame,
     CODEL_LOG_INFO(2, 1, "All ports connected, fetching data");
   }
 
+  // Reserve memory for detections
+  if (genom_sequence_reserve(&(Detections->data(self)->detections), 20) == -1)
+  {
+    Yolov8_e_OUT_OF_MEM_detail msg;
+    snprintf(msg.message, sizeof(msg.message), "%s", "Failed to reserve memory for plates");
+    // warnx("%s", msg.message);
+    return Yolov8_e_OUT_OF_MEM(&msg, self);
+  }
+
   // Load model
-  std::string model_path = resource_path + std::string("/models/yolov8s.onnx");
-  std::string classes_path = resource_path + std::string("/models/classes.txt");
+  const char *pkg_config_cmd = "pkg-config Yolov8-genom3 --variable=datarootdir";
+  std::string package_shared_dir = executeCommand(pkg_config_cmd);
+  std::string model_path = package_shared_dir + std::string("/yolov8-genom3/models/yolov8s.onnx");
+  std::string classes_path = package_shared_dir + std::string("/yolov8-genom3/models/classes.txt");
 
   inf.loadModel(model_path, classes_path);
 
@@ -56,22 +77,25 @@ FetchPorts(const Yolov8_ImageFrame *ImageFrame,
  *        Yolov8_e_BAD_CONFIG, Yolov8_e_OUT_OF_MEM.
  */
 genom_event
-DetectObjects(bool start_detection, const sequence_string *classes,
+DetectObjects(const sequence_string *classes,
               const Yolov8_ImageFrame *ImageFrame,
               const Yolov8_Detections *Detections, bool debug,
               bool show_frames, const genom_context self)
 {
 
-  or_sensor_frame *image_frame = ImageFrame->data(self);
-
-  if (!start_detection)
+  or_sensor_frame *image_frame;
+  if (ImageFrame->read(self) == genom_ok && ImageFrame->data(self))
+    image_frame = ImageFrame->data(self);
+  else
   {
-    if (debug)
-    {
-      CODEL_LOG_WARNING("Detection not started");
-    }
-    return Yolov8_pause_main;
+    Yolov8_e_BAD_IMAGE_PORT_detail msg;
+    snprintf(msg.message, sizeof(msg.message), "%s", "Failed to read image port. waiting");
+    CODEL_LOG_ERROR(msg.message);
+    return Yolov8_e_BAD_IMAGE_PORT(&msg, self);
   }
+
+  // Release memory for detections
+  Detections->data(self)->detections._length = 0;
 
   bool is_object_found = false;
   // Convert frame to cv::Mat
@@ -188,9 +212,8 @@ SetupClasses(char **resource_path, sequence_string *classes,
 
   const char *pkg_config_cmd = "pkg-config Yolov8-genom3 --variable=datarootdir";
   std::string package_shared_dir = executeCommand(pkg_config_cmd);
-  // resource_path = const_cast<char **>(package_shared_dir.c_str());
 
-  std::string classes_path = package_shared_dir + "/models/classes.txt";
+  std::string classes_path = package_shared_dir + "/yolov8-genom3/models/classes.txt";
   std::ifstream classes_file(classes_path);
   if (!classes_file.is_open())
   {
@@ -205,16 +228,23 @@ SetupClasses(char **resource_path, sequence_string *classes,
 
   // Read classes from file
   std::string line;
-  sequence_string *classes_vector = new sequence_string;
+  sequence_string classes_vector;
+  if (genom_sequence_reserve(&(classes_vector), 80) == -1)
+  {
+    Yolov8_e_OUT_OF_MEM_detail msg;
+    snprintf(msg.message, sizeof(msg.message), "%s", "Failed to reserve memory for plates");
+    // warnx("%s", msg.message);
+    return Yolov8_e_OUT_OF_MEM(&msg, self);
+  }
 
   while (std::getline(classes_file, line))
   {
-    classes_vector->_buffer = (char **)realloc(
-        classes_vector->_buffer, (classes_vector->_length + 1) * sizeof(char *));
-    classes_vector->_buffer[classes_vector->_length] = (char *)malloc(line.size() + 1);
+    classes_vector._buffer = (char **)realloc(
+        classes_vector._buffer, (classes_vector._length + 1) * sizeof(char *));
+    classes_vector._buffer[classes_vector._length] = (char *)malloc(line.size() + 1);
   }
 
-  if (classes_vector->_length == 0)
+  if (classes_vector._length == 0)
   {
     char message[128];
     snprintf(message, sizeof(message), "Classes file %s is empty",
@@ -227,7 +257,7 @@ SetupClasses(char **resource_path, sequence_string *classes,
 
   if (debug)
   {
-    CODEL_LOG_INFO(2, 1, "Found %d classes in file %s:", classes_vector->_length,
+    CODEL_LOG_INFO(2, 1, "Found %d classes in file %s:", classes_vector._length,
                    classes_path.c_str());
   }
 
@@ -246,8 +276,8 @@ SetupClasses(char **resource_path, sequence_string *classes,
   else
   {
     // Use all classes from file
-    classes->_length = classes_vector->_length;
-    classes->_buffer = classes_vector->_buffer;
+    classes->_length = classes_vector._length;
+    classes->_buffer = classes_vector._buffer;
   }
 
   if (debug)
@@ -269,7 +299,7 @@ genom_event
 SetStartDetection(bool *start_detection, const genom_context self)
 {
   *start_detection = true;
-  return Yolov8_pause_start;
+  return Yolov8_ether;
 }
 
 /* --- Activity stop_object_detection ----------------------------------- */

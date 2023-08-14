@@ -1,5 +1,5 @@
-#ifndef INFERENCE_H
-#define INFERENCE_H
+#ifndef DETECTION__INFERERNCE_H
+#define DETECTION__INFERERNCE_H
 
 // Cpp native
 #include <fstream>
@@ -226,4 +226,4 @@ private:
     cv::dnn::Net net;
 };
 
-#endif // INFERENCE_H
+#endif // DETECTION__INFERERNCE_H

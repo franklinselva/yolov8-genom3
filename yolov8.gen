@@ -62,9 +62,9 @@ component Yolov8 {
     period 100 ms;
     doc "Detect the objects in the image.";
 
-    codel <start> FetchPorts(port in ImageFrame, ids in resource_path, ids in debug)
+    codel <start> FetchPorts(ids in start_detection, port in ImageFrame, port out Detections, ids in resource_path, ids in debug)
           yield pause::start, main;
-    codel <main> DetectObjects(ids in start_detection, ids in classes, port in ImageFrame, port out Detections,
+    codel <main> DetectObjects(ids in classes, port in ImageFrame, port out Detections,
           ids in debug, ids in show_frames)
           yield main, pause::main, ether;
 
@@ -78,7 +78,7 @@ component Yolov8 {
     validate check_resource_path(ids out resource_path);
     task detect_objects;
 
-    codel <start>  SetupClasses(ids inout resource_path, ids inout classes, ids in debug)
+    codel <start>  SetupClasses(ids out resource_path, ids inout classes, ids in debug)
           yield setup, pause::start, ether;
     codel<setup> SetStartDetection(ids out start_detection)
           yield pause::setup, ether;
