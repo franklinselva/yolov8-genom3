@@ -21,4 +21,8 @@ yolo.start_object_detection()
 # To get the detections
 yolo.Detections()
 
+# To pause / resume the detection
+yolo.pause_object_detection()
+yolo.resume_object_detection()
+
 yolo.stop_object_detection()
