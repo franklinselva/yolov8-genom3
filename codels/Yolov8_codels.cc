@@ -39,3 +39,43 @@ check_resource_path(char **resource_path, const genom_context self)
 
   return genom_ok;
 }
+
+/* --- Function stop_object_detection ----------------------------------- */
+
+/** Codel StopDetection of function stop_object_detection.
+ *
+ * Returns genom_ok.
+ */
+genom_event
+StopDetection(bool *start_detection, const genom_context self)
+{
+  *start_detection = false;
+  return genom_ok;
+}
+
+/* --- Function pause_object_detection ---------------------------------- */
+
+/** Codel PauseDetection of function pause_object_detection.
+ *
+ * Returns genom_ok.
+ */
+genom_event
+PauseDetection(bool *pause_object_detection, const genom_context self)
+{
+  *pause_object_detection = true;
+  return genom_ok;
+}
+
+/* --- Function resume_object_detection --------------------------------- */
+
+/** Codel ResumeDetection of function resume_object_detection.
+ *
+ * Returns genom_ok.
+ */
+genom_event
+ResumeDetection(bool *pause_object_detection,
+                const genom_context self)
+{
+  *pause_object_detection = false;
+  return genom_ok;
+}

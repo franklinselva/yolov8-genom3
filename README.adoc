@@ -280,6 +280,22 @@ Stop detecting the object.
 
 '''
 
+[[pause_object_detection]]
+=== pause_object_detection (function)
+
+
+Pause detecting the object.
+
+'''
+
+[[resume_object_detection]]
+=== resume_object_detection (function)
+
+
+Resume detecting the object.
+
+'''
+
 == Tasks
 
 [[detect_objects]]

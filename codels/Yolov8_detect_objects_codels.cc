@@ -77,11 +77,30 @@ FetchPorts(bool start_detection, const Yolov8_ImageFrame *ImageFrame,
  *        Yolov8_e_BAD_CONFIG, Yolov8_e_OUT_OF_MEM.
  */
 genom_event
-DetectObjects(const sequence_string *classes,
+DetectObjects(const sequence_string *classes, bool start_detection,
+              bool pause_object_detection,
               const Yolov8_ImageFrame *ImageFrame,
               const Yolov8_Detections *Detections, bool debug,
               bool show_frames, const genom_context self)
 {
+  if (!start_detection)
+  {
+    if (debug)
+    {
+      CODEL_LOG_WARNING("Detection not started");
+    }
+    cv::destroyAllWindows();
+    return Yolov8_ether;
+  }
+
+  if (pause_object_detection)
+  {
+    if (debug)
+    {
+      CODEL_LOG_WARNING("Detection paused");
+    }
+    return Yolov8_pause_main;
+  }
 
   or_sensor_frame *image_frame;
   if (ImageFrame->read(self) == genom_ok && ImageFrame->data(self))
@@ -299,21 +318,5 @@ genom_event
 SetStartDetection(bool *start_detection, const genom_context self)
 {
   *start_detection = true;
-  return Yolov8_ether;
-}
-
-/* --- Activity stop_object_detection ----------------------------------- */
-
-/** Codel SetStopDetection of activity stop_object_detection.
- *
- * Triggered by Yolov8_start.
- * Yields to Yolov8_ether.
- * Throws Yolov8_e_BAD_IMAGE_PORT, Yolov8_e_OPENCV_ERROR,
- *        Yolov8_e_BAD_CONFIG, Yolov8_e_OUT_OF_MEM.
- */
-genom_event
-SetStopDetection(bool *start_detection, const genom_context self)
-{
-  *start_detection = false;
   return Yolov8_ether;
 }

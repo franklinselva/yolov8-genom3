@@ -44,7 +44,7 @@ component Yolov8 {
 
     sequence<string> classes;	            // Class names
     string resource_path;		            // Resource path
-    boolean debug, show_frames, start_detection;
+    boolean debug, show_frames, start_detection, pause_object_detection;
     octet verbose_level;
   };
 
@@ -64,7 +64,7 @@ component Yolov8 {
 
     codel <start> FetchPorts(ids in start_detection, port in ImageFrame, port out Detections, ids in resource_path, ids in debug)
           yield pause::start, main;
-    codel <main> DetectObjects(ids in classes, port in ImageFrame, port out Detections,
+    codel <main> DetectObjects(ids in classes, ids in start_detection, ids in pause_object_detection, port in ImageFrame, port out Detections,
           ids in debug, ids in show_frames)
           yield main, pause::main, ether;
 
@@ -82,15 +82,6 @@ component Yolov8 {
           yield setup, pause::start, ether;
     codel<setup> SetStartDetection(ids out start_detection)
           yield pause::setup, ether;
-  };
-
-  activity stop_object_detection() {
-    doc "Stop detecting the object.";
-    after start_object_detection;
-    task detect_objects;
-
-    codel<start> SetStopDetection(ids out start_detection)
-          yield ether;
   };
 
   /* ------------------ SERVICE DEFINITION: Attributes -------------------- */
@@ -111,4 +102,18 @@ component Yolov8 {
   };
 
   /* ------------------ SERVICE DEFINITION: Functions -------------------- */
+  function stop_object_detection() {
+    doc "Stop detecting the object.";
+    codel StopDetection(ids out start_detection);
+  };
+
+  function pause_object_detection() {
+    doc "Pause detecting the object.";
+    codel PauseDetection(ids out pause_object_detection);
+  };
+
+  function resume_object_detection() {
+    doc "Resume detecting the object.";
+    codel ResumeDetection(ids out pause_object_detection);
+  };
 };
